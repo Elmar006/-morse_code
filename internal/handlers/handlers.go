@@ -12,7 +12,33 @@ import (
 )
 
 func HomeHandler(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, "../index.html")
+
+	if r.URL.Path != "/" {
+		http.NotFound(w, r)
+		return
+	}
+
+	paths := []string{
+		"index.html",
+		"../index.html",
+		"./index.html",
+	}
+
+	var filePath string
+	for _, path := range paths {
+		if _, err := os.Stat(path); err == nil {
+			filePath = path
+			break
+		}
+	}
+
+	if filePath == "" {
+		http.Error(w, "index.html not found", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	http.ServeFile(w, r, filePath)
 }
 
 func UploadHandler(w http.ResponseWriter, r *http.Request) {
